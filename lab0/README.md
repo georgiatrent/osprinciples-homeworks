@@ -1,25 +1,28 @@
-## UID: 123456789
+## UID: 105812649
 
 (IMPORTANT: Only replace the above numbers with your true UID, do not modify spacing and newlines, otherwise your tarfile might not be created correctly)
 
 # A Kernel Seedling
 
-One sentence description
+My kernel module is able to start, create a file inside /proc which returns the number of processes, and then be removed.
 
 ## Building
 
-Explain how to build your kernel module
+Running the following command builds my kernel module:
+"make". Running "sudo insmod proc_count.ko" inserts my kernel module into the kernel.
 
 ## Running
 
-Explain how to run your kernel module and what to expect
+The following command inserts my kernel module into the kernel:
+"sudo insmod proc_count.ko". The results can be observed by running the command "cat /proc/count", which returns a single integer describing the number of current running processes.
+
+
 
 ## Cleaning Up
 
-Explain how to remove your kernel module and clean up the code
+Running "make clean" followed by "sudo rmmod proc_count" cleans up the files and then removes the kernel module.
 
 ## Testing
 
-Report which kernel release version you tested your module on
-(hint: use `uname`, check for options with `man uname`).
-It should match release numbers as seen on <https://www.kernel.org/>.
+I tested my kernel module on 5.14.8-arch1-1.
+
