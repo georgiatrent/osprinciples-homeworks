@@ -1,10 +1,16 @@
+#include <errno.h>
+#include <fcntl.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/wait.h>
+#include <unistd.h>
+
 int main(int argc, char *argv[])
 {
-	printf("how many args are there: %d\n", argc);
-	printf("what are they:\n");
-	for (int i = 0; i < argc; i++)
-	{
-		printf("argv %d is: %s \n", i, argv[i]);
-	}
+	printf("I am a lazy program, letting other program do work.\n");
+	printf("I will just wait for their report\n\n");
+	execlp("ls", "ls", "-a", "-l", NULL);
+	printf("They finished; Done!\n");
 	return 0;
 }
+
