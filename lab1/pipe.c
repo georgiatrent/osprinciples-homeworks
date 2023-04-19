@@ -5,24 +5,22 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-int main(int argc, char *argv[])
-{
-  int return_code = fork();
-  if (return_code == 0) {
-    printf("This is the child process!\n");
-    execlp("ls", "ls", NULL);
-    exit(0);
-  } else if (return_code > 0) {
-    printf("I am lazy parent, letting my child to ls the directory\n");
-    printf("I will just wait for their report\n");
-    int pid = return_code;
-    int status = 0;
-    waitpid(pid, &status, 0);
-    printf("Child process exits with code: %d\n", WEXITSTATUS(status));
-  } else {
-    printf("Child process creation error! \n");
-  }
-  printf("They finished; Done!\n");
-  return 0;
-}
+int main(void) {
+  int fds[2];
+  pipe(fds); // create a pipe of two ends
 
+  int ret = fork();
+  if (ret == 0) {
+    // child says hello to parents
+    // write(fd, char* the content to write, int bytes to write)
+    sleep(5);
+    write(fds[1], "hello, parent!", 14);
+    //sleep(5);
+    write(fds[1], "just one more thing!", 21);
+  } else if (ret > 0) {
+    char buffer[4096];
+    // read(fd, char* place to dump read, int bytes to read)
+    read(fds[0], buffer, 35);
+    printf("%s\n", buffer);
+  }
+}
