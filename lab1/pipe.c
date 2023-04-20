@@ -6,21 +6,16 @@
 #include <unistd.h>
 
 int main(void) {
-  int fds[2];
-  pipe(fds); // create a pipe of two ends
 
-  int ret = fork();
-  if (ret == 0) {
-    // child says hello to parents
-    // write(fd, char* the content to write, int bytes to write)
-    sleep(5);
-    write(fds[1], "hello, parent!", 14);
-    //sleep(5);
-    write(fds[1], "just one more thing!", 21);
-  } else if (ret > 0) {
-    char buffer[4096];
-    // read(fd, char* place to dump read, int bytes to read)
-    read(fds[0], buffer, 35);
-    printf("%s\n", buffer);
-  }
+  int fd = open("my_new_file.txt", O_APPEND | O_WRONLY | O_CREAT); // opens a new file
+  // fd points to the txt file now
+  printf("%d", fd);
+  if (fd < 0)
+    printf("Error opening the file\n");
+
+  dup2(fd, STDOUT_FILENO); // now the STDOUT_FILENO points to "my_new_file.txt"
+  printf("This message will be printed to the my_new_file.txt, instead of the "
+         "console.\n");
+
+  return 0;
 }
