@@ -22,6 +22,9 @@ struct process
 
   /* Additional fields here */
   u32 remaining_time;
+  u32 waiting_time;
+  bool baby_has_run;
+
   /* End of "Additional fields here" */
 };
 
@@ -177,67 +180,101 @@ int main(int argc, char *argv[])
   u32 baby_running = 0;
 
   struct process *current_baby;
-  struct process *running_baby;
+  struct process *running_baby = NULL;
   u32 theTime = 0;
-  u32 babies_to_run = size + 30; //number of processes
+  u32 babies_to_run = size; //number of processes
+  u32 active_baby_counter;
+  total_waiting_time = 0;
+  total_response_time = 0;
+  u32 whats_babay_time = 0;
+
   while(babies_to_run)
   {
+    //printf("Time: %i", theTime);
     //Add babies to queue if they have arrived
     for(u32 i = 0; i < size; i++)
     {
       current_baby = &data[i];
       if(current_baby->arrival_time == theTime)
       {
+        //printf(" A new baby has arrived.");
+        current_baby->baby_has_run = false;
         struct process *baby = current_baby;
         TAILQ_INSERT_TAIL(&list, baby, pointers);
         baby->remaining_time = baby->burst_time;
       }
     }
+    //for each clock tick, check if:
+    //  (1) A baby is running
+    //      (a) Baby has reached end of its time
+    //  (2) Time is divisible by quantum time
+    //  (3)
     if(!baby_running)
     {
       if(!TAILQ_EMPTY(&list))
       {
-        running_baby = TAILQ_FIRST(&list);
-        baby_running = 1;
-        running_baby->remaining_time--;
-        printf("This baby's remaining time is %i and pid is %i \n", running_baby->remaining_time, running_baby->pid);
-        if(running_baby->remaining_time == 0)
-        {
-          baby_running = 0;
-          TAILQ_REMOVE(&list, running_baby, pointers);
-        }
+        struct process *hi_baby = TAILQ_FIRST(&list);
+        running_baby = hi_baby;
+        TAILQ_REMOVE(&list, hi_baby, pointers); //bye baby
+        baby_running = running_baby->pid;
+        active_baby_counter = 0;
+        //printf("It's baby %i's turn.", baby_running);
       }
       else
       {
-        printf("The queue is empty");
+        theTime++;
+        continue;
       }
-
     }
 
+    if(theTime==0)
+    {
+      theTime++;
+      continue;
+    }
+    // if(running_baby->remaining_time == 0)
+    // {
+    //   babies_to_run--;
+    //   baby_running = 0;
+    // }
 
+    if(baby_running)
+    {
 
+      active_baby_counter++;
+      running_baby->remaining_time--;
+      if(!running_baby->baby_has_run)
+      {
+        total_response_time+= (theTime - running_baby->arrival_time - 1);
+        running_baby->baby_has_run = true;
+        //printf(" response time is %i after process no. %i", (theTime - running_baby->arrival_time), running_baby->pid);
+      }
+      //running_baby->baby_has_run = true;
+      whats_babay_time++;
+      if(running_baby->remaining_time == 0)
+      {
+        //printf(" This baby has run to completion.");
+        total_waiting_time+=(theTime - running_baby->burst_time - running_baby->arrival_time);
+        babies_to_run--;
+        baby_running = 0;
+        whats_babay_time = 0;
+      }
+      else if(whats_babay_time != quantum_length && running_baby->remaining_time > 0)
+      {
+        //printf("Keep going baby no. %i .\n", running_baby->pid);
+      }
 
-    babies_to_run--;
+      if(whats_babay_time == quantum_length)
+      {
+        //printf("It's not your turn anymore, baby no. %i, remain: %i", running_baby->pid, running_baby->remaining_time);
+        whats_babay_time = 0;
+        TAILQ_INSERT_TAIL(&list, running_baby, pointers);
+        baby_running = 0;
+      }
+    }
+    //printf("\n");
     theTime++;
   }
-
-
-
-  //sort based on arrival time
-
-
-
-
-
-
-
-
-  while(!TAILQ_EMPTY(&list))
-  {
-    printf("%i", TAILQ_FIRST(&list)->burst_time);
-    TAILQ_REMOVE(&list, TAILQ_FIRST(&list), pointers);
-  }
-
 
   /* End of "Your code here" */
 
