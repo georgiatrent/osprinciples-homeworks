@@ -7,6 +7,7 @@
 
 #include <pthread.h>
 
+
 struct list_entry {
 	const char *key;
 	uint32_t value;
@@ -17,6 +18,8 @@ SLIST_HEAD(list_head, list_entry);
 
 struct hash_table_entry {
 	struct list_head list_head;
+	//add a lock to each hash table entry
+	pthread_mutex_t mutex;
 };
 
 struct hash_table_v2 {
@@ -50,7 +53,7 @@ static struct list_entry *get_list_entry(struct hash_table_v2 *hash_table,
 	assert(key != NULL);
 
 	struct list_entry *entry = NULL;
-	
+
 	SLIST_FOREACH(entry, list_head, pointers) {
 	  if (strcmp(entry->key, key) == 0) {
 	    return entry;
@@ -72,20 +75,51 @@ void hash_table_v2_add_entry(struct hash_table_v2 *hash_table,
                              const char *key,
                              uint32_t value)
 {
+
 	struct hash_table_entry *hash_table_entry = get_hash_table_entry(hash_table, key);
 	struct list_head *list_head = &hash_table_entry->list_head;
+	pthread_mutex_t *entrySpecificLock = &hash_table_entry->mutex;
+	int STOP_HERE = pthread_mutex_lock(entrySpecificLock);
+	if(STOP_HERE != 0)
+	{
+		exit(STOP_HERE);
+	}
 	struct list_entry *list_entry = get_list_entry(hash_table, key, list_head);
+	// STOP_HERE = pthread_mutex_unlock(entrySpecificLock);
+	// if(STOP_HERE != 0)
+	// {
+	// 	exit(STOP_HERE);
+	// }
 
 	/* Update the value if it already exists */
 	if (list_entry != NULL) {
+		// STOP_HERE = pthread_mutex_lock(entrySpecificLock);
+		// if(STOP_HERE != 0)
+		// {
+		// 	exit(STOP_HERE);
+		// }
 		list_entry->value = value;
+		STOP_HERE = pthread_mutex_unlock(entrySpecificLock);
+		if(STOP_HERE != 0)
+		{
+			exit(STOP_HERE);
+		}
 		return;
 	}
-
+	// STOP_HERE = pthread_mutex_lock(entrySpecificLock);
+	// if(STOP_HERE != 0)
+	// {
+	// 	exit(STOP_HERE);
+	// }
 	list_entry = calloc(1, sizeof(struct list_entry));
 	list_entry->key = key;
 	list_entry->value = value;
 	SLIST_INSERT_HEAD(list_head, list_entry, pointers);
+	STOP_HERE = pthread_mutex_unlock(entrySpecificLock);
+	if(STOP_HERE != 0)
+	{
+		exit(STOP_HERE);
+	}
 }
 
 uint32_t hash_table_v2_get_value(struct hash_table_v2 *hash_table,

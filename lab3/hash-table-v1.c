@@ -7,6 +7,10 @@
 
 #include <pthread.h>
 
+//added code
+static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+//end of added code
+
 struct list_entry {
 	const char *key;
 	uint32_t value;
@@ -50,7 +54,7 @@ static struct list_entry *get_list_entry(struct hash_table_v1 *hash_table,
 	assert(key != NULL);
 
 	struct list_entry *entry = NULL;
-	
+
 	SLIST_FOREACH(entry, list_head, pointers) {
 	  if (strcmp(entry->key, key) == 0) {
 	    return entry;
@@ -72,6 +76,12 @@ void hash_table_v1_add_entry(struct hash_table_v1 *hash_table,
                              const char *key,
                              uint32_t value)
 {
+	int YOU_SHALL_NOT_PASS = pthread_mutex_lock(&mutex);
+	if(YOU_SHALL_NOT_PASS != 0)
+	{
+		exit(YOU_SHALL_NOT_PASS);
+	}
+	//______
 	struct hash_table_entry *hash_table_entry = get_hash_table_entry(hash_table, key);
 	struct list_head *list_head = &hash_table_entry->list_head;
 	struct list_entry *list_entry = get_list_entry(hash_table, key, list_head);
@@ -81,11 +91,16 @@ void hash_table_v1_add_entry(struct hash_table_v1 *hash_table,
 		list_entry->value = value;
 		return;
 	}
-
 	list_entry = calloc(1, sizeof(struct list_entry));
 	list_entry->key = key;
 	list_entry->value = value;
 	SLIST_INSERT_HEAD(list_head, list_entry, pointers);
+	//______
+	int okay_go_ahead = pthread_mutex_unlock(&mutex);
+	if(okay_go_ahead != 0)
+	{
+		exit(okay_go_ahead);
+	}
 }
 
 uint32_t hash_table_v1_get_value(struct hash_table_v1 *hash_table,
